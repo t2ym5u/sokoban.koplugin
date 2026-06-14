@@ -2,13 +2,22 @@
 
 A Sokoban plugin for [KOReader](https://github.com/koreader/koreader).
 
+
+## Screenshot
+
+*(Screenshot to be added.)*
+
+## Rules
+
+Push every box onto a marked target square. Boxes can only be pushed (not pulled). You cannot push two boxes at once or push a box into a wall. Plan ahead — a misplaced box may become unmovable.
+
 ## Concept
 
 Push all crates onto their target squares. You can only push (never pull) a
 crate, and you cannot push two crates at once. Think before you move — a wrong
 push can make the puzzle unsolvable!
 
-## Planned Features
+## Features
 
 - **Bundled level packs** — classic XSokoban 90 levels + community packs
 - **Custom levels** — load `.xsb` / `.slc` level files from the device
@@ -28,6 +37,7 @@ push can make the puzzle unsolvable!
 | Restart level | Tap **Restart** |
 | Next / previous level | Tap **›** / **‹** |
 | Open level browser | Tap **Levels** |
+| Show rules | Tap **Rules** |
 
 ## Why e-ink friendly?
 

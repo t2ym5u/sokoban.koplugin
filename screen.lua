@@ -33,6 +33,35 @@ local DeviceScreen = Device.screen
 -- SokobanScreen
 -- ---------------------------------------------------------------------------
 
+local GAME_RULES_EN = _([[
+Sokoban — Rules
+
+Push boxes to their target positions (marked squares on the floor).
+
+Controls:
+• Tap or swipe to move the player one step.
+• Walk into a box to push it in that direction.
+• Boxes can only be pushed — not pulled.
+• You cannot push two boxes at once or push a box into a wall.
+
+Plan your moves carefully — getting a box into a corner can make the puzzle unsolvable!
+Tap Undo to step back, or New to start over.
+]])
+
+local GAME_RULES_FR = [[
+Sokoban — Règles
+
+Poussez toutes les caisses vers leurs emplacements cibles (cases marquées au sol).
+
+Contrôles :
+• Déplacez-vous pour pousser une caisse dans cette direction.
+• Les caisses ne peuvent être que poussées — pas tirées.
+• Il est impossible de pousser deux caisses à la fois ou de pousser une caisse contre un mur.
+
+Planifiez vos mouvements avec soin — une caisse coincée dans un coin peut rendre le puzzle impossible !
+Appuyez sur Annuler pour revenir en arrière, ou sur Nouveau pour recommencer.
+]]
+
 local SokobanScreen = ScreenBase:extend{}
 
 function SokobanScreen:init()
@@ -67,6 +96,7 @@ function SokobanScreen:buildLayout()
             { id = "level_btn", text = self:_levelLabel(),
               callback = function() end },
             { text = _("\xe2\x96\xb6"), callback = function() self:onNextLevel() end },
+            self:makeRulesButtonConfig(GAME_RULES_EN, GAME_RULES_FR),
             self:makeCloseButtonConfig(),
         }},
     }
