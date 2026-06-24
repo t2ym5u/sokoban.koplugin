@@ -57,7 +57,7 @@ end
 local function centeredText(bb, text, face, cx, cy, color)
     local m = RenderText:sizeUtf8Text(0, cx * 2, face, text, true, false)
     local tx = cx - math.floor(m.x / 2)
-    local ty = cy - math.floor((m.y_bottom - m.y_top) / 2) + m.y_top
+    local ty = cy - math.floor((m.y_bottom - m.y_top) / 2)
     RenderText:renderUtf8Text(bb, tx, ty, face, text, true, false, color or Blitbuffer.COLOR_BLACK)
 end
 
