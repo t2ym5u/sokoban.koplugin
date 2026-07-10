@@ -50,7 +50,7 @@ function SokobanBoardWidget:init()
     self.paint_rect = nil
 
     self.ges_events = {
-        CellTap = { GestureRange:new{ ges = "tap", range = self.dimen } },
+        CellTap = { GestureRange:new{ ges = "tap", range = function() return self.paint_rect end } },
     }
 end
 
