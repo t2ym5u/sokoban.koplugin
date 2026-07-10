@@ -118,7 +118,7 @@ function SokobanScreen:buildLayout()
         board      = self.board,
         max_width  = board_max,
         max_height = board_max,
-        onCellTap  = function(r, c) self:onCellTap(r, c) end,
+        cellTapCallback  = function(r, c) self:onCellTap(r, c) end,
     }
 
     local board_frame = FrameContainer:new{
