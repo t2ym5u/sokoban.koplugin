@@ -29,7 +29,7 @@ local SokobanBoardWidget = InputContainer:extend{
     board      = nil,
     max_width  = 0,
     max_height = 0,
-    onCellTap  = nil,
+    cellTapCallback = nil,
 }
 
 function SokobanBoardWidget:init()
@@ -69,7 +69,7 @@ function SokobanBoardWidget:onCellTap(ges)
     local c = math.floor(lx / self.cell) + 1
     local r = math.floor(ly / self.cell) + 1
     if r >= 1 and r <= self.board.rows and c >= 1 and c <= self.board.cols then
-        if self.onCellTap then self.onCellTap(r, c) end
+        if self.cellTapCallback then self.cellTapCallback(r, c) end
     end
     return true
 end
