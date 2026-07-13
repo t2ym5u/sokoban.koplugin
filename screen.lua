@@ -249,16 +249,7 @@ function SokobanScreen:updateStatus(msg)
     elseif self.board.won then
         status = T(_("Solved! Moves: %1  Pushes: %2"), self.board.moves, self.board.pushes)
     else
-        local _, _, done = self.board:countBoxes()
-        local total = 0
-        for r = 1, self.board.rows do
-            for c = 1, self.board.cols do
-                local ch = self.board.grid[r][c]
-                if ch == SokobanBoard.CELL_BOX or ch == SokobanBoard.CELL_BOX_T then
-                    total = total + 1
-                end
-            end
-        end
+        local total, _unused, done = self.board:countBoxes()
         status = T(_("Boxes: %1/%2  Moves: %3  Pushes: %4"),
             done, total, self.board.moves, self.board.pushes)
     end
