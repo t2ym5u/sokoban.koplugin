@@ -61,7 +61,7 @@ local function centeredText(bb, text, face, cx, cy, color)
     RenderText:renderUtf8Text(bb, tx, ty, face, text, true, false, color or Blitbuffer.COLOR_BLACK)
 end
 
-function SokobanBoardWidget:onCellTap(ges)
+function SokobanBoardWidget:onCellTap(_, ges)
     if not self.paint_rect then return end
     local lx = ges.pos.x - self.paint_rect.x
     local ly = ges.pos.y - self.paint_rect.y
@@ -103,8 +103,8 @@ function SokobanBoardWidget:paintTo(bb, x, y)
                 bb:paintRect(cx + pad, cy + pad, cell - 2*pad, cell - 2*pad, C_TARGET)
                 -- Draw target X
                 local s = math.max(2, math.floor(cell * 0.2))
-                local mx = cx + cell//2
-                local my = cy + cell//2
+                local mx = cx + math.floor(cell / 2)
+                local my = cy + math.floor(cell / 2)
                 drawLine(bb, mx - s, my - 1, s * 2, 2, C_FG)
                 drawLine(bb, mx - 1, my - s, 2, s * 2, C_FG)
             elseif ch == SokobanBoard.CELL_BOX then
@@ -124,11 +124,11 @@ function SokobanBoardWidget:paintTo(bb, x, y)
             elseif ch == SokobanBoard.CELL_PLAYER then
                 bb:paintRect(cx + pad, cy + pad, cell - 2*pad, cell - 2*pad, C_FLOOR)
                 local pr = math.max(2, math.floor(cell * 0.3))
-                bb:paintCircle(cx + cell//2, cy + cell//2, pr, C_PLAYER)
+                bb:paintCircle(cx + math.floor(cell / 2), cy + math.floor(cell / 2), pr, C_PLAYER)
             elseif ch == SokobanBoard.CELL_PLAY_T then
                 bb:paintRect(cx + pad, cy + pad, cell - 2*pad, cell - 2*pad, C_TARGET)
                 local pr = math.max(2, math.floor(cell * 0.3))
-                bb:paintCircle(cx + cell//2, cy + cell//2, pr, C_PLAYER)
+                bb:paintCircle(cx + math.floor(cell / 2), cy + math.floor(cell / 2), pr, C_PLAYER)
             else
                 -- Outside/empty
                 bb:paintRect(cx, cy, cell, cell, C_OUTSIDE)
