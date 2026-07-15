@@ -87,8 +87,15 @@ function SokobanScreen:buildLayout()
         and math.max(math.floor(sw * 0.35), 100)
         or  math.floor(sw * 0.9)
 
-    -- Top bar
-    local top_buttons = ButtonTable:new{
+    -- Title bar with Options menu
+    local title_bar = self:buildTitleBar(_("Sokoban"), function()
+        return {
+            self:makeRulesButtonConfig(GAME_RULES_EN, GAME_RULES_FR),
+        }
+    end)
+
+    -- Level navigation row (kept in the footer)
+    local nav_buttons = ButtonTable:new{
         shrink_unneeded_width = true,
         width   = btn_width,
         buttons = {{
@@ -96,11 +103,9 @@ function SokobanScreen:buildLayout()
             { id = "level_btn", text = self:_levelLabel(),
               callback = function() end },
             { text = _("\xe2\x96\xb6"), callback = function() self:onNextLevel() end },
-            self:makeRulesButtonConfig(GAME_RULES_EN, GAME_RULES_FR),
-            self:makeCloseButtonConfig(),
         }},
     }
-    self.level_btn = top_buttons:getButtonById("level_btn")
+    self.level_btn = nav_buttons:getButtonById("level_btn")
 
     -- Board widget
     local margin      = Size.margin.default
@@ -154,7 +159,7 @@ function SokobanScreen:buildLayout()
     if is_landscape then
         local panel = VerticalGroup:new{
             align = "center",
-            top_buttons,
+            nav_buttons,
             VerticalSpan:new{ width = Size.span.vertical_large },
             self.status_text,
             VerticalSpan:new{ width = Size.span.vertical_large },
@@ -162,12 +167,13 @@ function SokobanScreen:buildLayout()
             VerticalSpan:new{ width = Size.span.vertical_large },
             bottom_buttons,
         }
-        self.layout = HorizontalGroup:new{
+        local content = HorizontalGroup:new{
             align  = "center",
             board_frame,
             HorizontalSpan:new{ width = Size.span.horizontal_default },
             panel,
         }
+        self:buildLandscapeLayout(title_bar, content)
     else
         local content = VerticalGroup:new{
             align = "center",
@@ -177,13 +183,14 @@ function SokobanScreen:buildLayout()
         }
         local footer = VerticalGroup:new{
             align = "center",
+            nav_buttons,
+            VerticalSpan:new{ width = Size.span.vertical_large },
             dpad,
             VerticalSpan:new{ width = Size.span.vertical_large },
             bottom_buttons,
         }
-        self:buildPortraitLayout(top_buttons, content, footer)
+        self:buildPortraitLayout(title_bar, content, footer)
     end
-    self[1] = self.layout
     self:updateStatus()
 end
 
