@@ -132,6 +132,8 @@ function SokobanScreen:buildLayout()
         self.board_widget,
     }
 
+    self.status_text:setMaxWidth(is_landscape and btn_width or (self.board_widget.w + frame_extra))
+
     -- D-pad buttons
     local dpad_w = math.floor(btn_width * 0.35)
     local dpad = ButtonTable:new{
