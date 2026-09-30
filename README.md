@@ -5,7 +5,7 @@ A Sokoban plugin for [KOReader](https://github.com/koreader/koreader).
 
 ## Screenshot
 
-*(Screenshot to be added.)*
+![Screenshot](images/sokoban.png)
 
 ## Rules
 
