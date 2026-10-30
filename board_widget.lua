@@ -53,9 +53,6 @@ function SokobanBoardWidget:init()
     self.h    = cell * rows
     self.dimen = Geom:new{ w = self.w, h = self.h }
 
-    local fs = math.max(6, math.floor(cell * 0.55))
-    self.sym_face = Font:getFace("cfont", fs)
-
     self.paint_rect = nil
 
     self.ges_events = {
@@ -63,11 +60,29 @@ function SokobanBoardWidget:init()
     }
 end
 
-local function centeredText(bb, text, face, cx, cy, color)
-    local m = RenderText:sizeUtf8Text(0, cx * 2, face, text, true, false)
-    local tx = cx - math.floor(m.x / 2)
-    local ty = cy - math.floor((m.y_bottom - m.y_top) / 2)
-    RenderText:renderUtf8Text(bb, tx, ty, face, text, true, false, color or Blitbuffer.COLOR_BLACK)
+-- The level format uses ' ' both for floor inside the walls and for the
+-- blank padding around them, so the padding was painted as floor and the
+-- level looked surrounded by a field of playable squares. Flood-fill from
+-- the player over everything that isn't a wall: what it reaches is the
+-- inside, the rest is outside. Walls never move, so this holds for the
+-- whole level (restart and undo included).
+local function computeInside(board)
+    local inside = {}
+    for r = 1, board.rows do inside[r] = {} end
+    local stack = { { board.player_r, board.player_c } }
+    while #stack > 0 do
+        local p = table.remove(stack)
+        local r, c = p[1], p[2]
+        if r >= 1 and r <= board.rows and c >= 1 and c <= board.cols
+                and not inside[r][c] and board.grid[r][c] ~= SokobanBoard.CELL_WALL then
+            inside[r][c] = true
+            stack[#stack + 1] = { r + 1, c }
+            stack[#stack + 1] = { r - 1, c }
+            stack[#stack + 1] = { r, c + 1 }
+            stack[#stack + 1] = { r, c - 1 }
+        end
+    end
+    return inside
 end
 
 function SokobanBoardWidget:onCellTap(_, ges)
@@ -97,6 +112,12 @@ function SokobanBoardWidget:paintTo(bb, x, y)
 
     bb:paintRect(x, y, self.w, self.h, C_BG)
 
+    if self._inside_grid ~= board.grid then
+        self._inside      = computeInside(board)
+        self._inside_grid = board.grid
+    end
+    local inside = self._inside
+
     for r = 1, board.rows do
         for c = 1, board.cols do
             local ch = board.grid[r][c]
@@ -104,7 +125,9 @@ function SokobanBoardWidget:paintTo(bb, x, y)
             local cy = y + (r - 1) * cell
             local pad = math.max(1, math.floor(cell * 0.06))
 
-            if ch == SokobanBoard.CELL_WALL then
+            if ch ~= SokobanBoard.CELL_WALL and not inside[r][c] then
+                bb:paintRect(cx, cy, cell, cell, C_OUTSIDE)
+            elseif ch == SokobanBoard.CELL_WALL then
                 bb:paintRect(cx, cy, cell, cell, C_WALL)
             elseif ch == SokobanBoard.CELL_FLOOR then
                 bb:paintRect(cx + pad, cy + pad, cell - 2*pad, cell - 2*pad, C_FLOOR)

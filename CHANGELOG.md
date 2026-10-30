@@ -6,6 +6,26 @@ Reconstructed from this repository's git history: each release lists the
 feature and fix commits it carried. Version bumps, screenshot additions
 and CI syncs are left out.
 
+## [1.2.0] - 2026-10-30
+
+### Added
+- "Restart level" in the title-bar menu.
+
+### Changed
+- Redesigned play screen: the level is larger, filling the room the controls
+  leave. The arrows form a proper cross around Undo, and ◀ Restart ▶ sit in a
+  full-width bar below it.
+- The status line reads "Level 3/50 · Boxes: 2/4 · Moves: 31 · Pushes: 9"
+  (the level number used to be a dead button between ◀ and ▶) and wraps in
+  landscape instead of being cut off.
+- The rules describe the actual controls: tap a cell to step towards it or
+  use the arrows, Restart to start the level over, ◀ / ▶ to change level.
+
+### Fixed
+- The blank area around a level was painted as floor, so the level looked
+  surrounded by a field of playable squares. Only the inside of the walls is
+  drawn as floor now.
+
 ## [1.1.19] - 2026-10-07
 
 ### Fixed
