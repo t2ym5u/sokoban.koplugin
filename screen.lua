@@ -7,7 +7,6 @@ local function lrequire(name)
     return package.loaded[key]
 end
 
-local ButtonTable     = require("ui/widget/buttontable")
 local Device          = require("device")
 local FrameContainer  = require("ui/widget/container/framecontainer")
 local HorizontalGroup = require("ui/widget/horizontalgroup")
@@ -39,13 +38,13 @@ Sokoban — Rules
 Push boxes to their target positions (marked squares on the floor).
 
 Controls:
-• Tap or swipe to move the player one step.
+• Tap a cell to step one square towards it, or use the arrow buttons.
 • Walk into a box to push it in that direction.
 • Boxes can only be pushed — not pulled.
 • You cannot push two boxes at once or push a box into a wall.
 
 Plan your moves carefully — getting a box into a corner can make the puzzle unsolvable!
-Tap Undo to step back, or New to start over.
+Tap Undo to step back, or Restart to start the level over. ◀ and ▶ switch to the previous or next level.
 ]])
 
 local GAME_RULES_FR = [[
@@ -54,12 +53,13 @@ Sokoban — Règles
 Poussez toutes les caisses vers leurs emplacements cibles (cases marquées au sol).
 
 Contrôles :
+• Appuyez sur une case pour faire un pas vers elle, ou utilisez les flèches.
 • Déplacez-vous pour pousser une caisse dans cette direction.
 • Les caisses ne peuvent être que poussées — pas tirées.
 • Il est impossible de pousser deux caisses à la fois ou de pousser une caisse contre un mur.
 
 Planifiez vos mouvements avec soin — une caisse coincée dans un coin peut rendre le puzzle impossible !
-Appuyez sur Annuler pour revenir en arrière, ou sur Nouveau pour recommencer.
+Appuyez sur Annuler pour revenir en arrière, ou sur Recommencer pour reprendre le niveau. ◀ et ▶ passent au niveau précédent ou suivant.
 ]]
 
 local SokobanScreen = ScreenBase:extend{}
@@ -79,119 +79,75 @@ function SokobanScreen:serializeState()
 end
 
 function SokobanScreen:buildLayout()
-    local sw           = DeviceScreen:getWidth()
-    local sh = DeviceScreen:getHeight()
     local is_landscape = self:isLandscape()
-
-    local btn_width = is_landscape
-        and math.max(math.floor(sw * 0.35), 100)
-        or  math.floor(sw * 0.9)
 
     -- Title bar with Options menu
     local title_bar = self:buildTitleBar(_("Sokoban"), function()
         return {
+            { text = _("Restart level"), callback = function() self:onRestart() end },
             self:makeRulesButtonConfig(GAME_RULES_EN, GAME_RULES_FR),
         }
     end)
 
-    -- Level navigation row (kept in the footer)
-    local nav_buttons = ButtonTable:new{
-        shrink_unneeded_width = true,
-        width   = btn_width,
-        buttons = {{
-            { text = _("\xe2\x97\x80"), callback = function() self:onPrevLevel() end },
-            { id = "level_btn", text = self:_levelLabel(),
-              callback = function() end },
-            { text = _("\xe2\x96\xb6"), callback = function() self:onNextLevel() end },
-        }},
+    -- D-pad: a 3x3 cross around Undo, at the controls width like the action
+    -- bar. The corners are blank, disabled cells so the arrows line up.
+    local function blank() return { text = "", enabled = false, callback = function() end } end
+    local dpad = self:buildActionBar({
+        { blank(),
+          { text = "\xe2\x86\x91", callback = function() self:moveDir(-1, 0) end },
+          blank() },
+        { { text = "\xe2\x86\x90", callback = function() self:moveDir(0, -1) end },
+          { text = _("Undo"),     callback = function() self:onUndo() end },
+          { text = "\xe2\x86\x92", callback = function() self:moveDir(0, 1) end } },
+        { blank(),
+          { text = "\xe2\x86\x93", callback = function() self:moveDir(1, 0) end },
+          blank() },
+    })
+
+    -- Level navigation around Restart; the level number is in the status.
+    local action_bar = self:buildActionBar({
+        { text = _("\xe2\x97\x80"), callback = function() self:onPrevLevel() end },
+        { text = _("Restart"), callback = function() self:onRestart() end },
+        { text = _("\xe2\x96\xb6"), callback = function() self:onNextLevel() end },
+    })
+
+    self.status_text:setMaxWidth(self:getControlsWidth())
+    local controls = VerticalGroup:new{
+        align = "center",
+        self.status_text,
+        VerticalSpan:new{ width = Size.span.vertical_large },
+        dpad,
+        VerticalSpan:new{ width = Size.span.vertical_default },
+        action_bar,
     }
-    self.level_btn = nav_buttons:getButtonById("level_btn")
 
     -- Board widget
-    local margin      = Size.margin.default
-    local padding     = Size.padding.large
-    local frame_extra = (padding + margin) * 2
-    local board_max
-    if is_landscape then
-        board_max = math.min(sw - math.floor(sw * 0.4) - frame_extra, sh - frame_extra)
-    else
-        board_max = math.min(sw - frame_extra, sh - 170 - frame_extra)
-    end
-    board_max = math.max(board_max, 80)
-
+    local frame_pad   = Size.padding.large
+    local frame_extra = 2 * (frame_pad + Size.border.window)
+    local budget_w, budget_h = self:getBoardBudget(title_bar, controls)
     self.board_widget = SokobanBoardWidget:new{
         board      = self.board,
-        max_width  = board_max,
-        max_height = board_max,
+        max_width  = math.max(budget_w - frame_extra, 80),
+        max_height = math.max(budget_h - frame_extra, 80),
         cellTapCallback  = function(r, c) self:onCellTap(r, c) end,
     }
-
     local board_frame = FrameContainer:new{
-        padding = padding,
-        margin  = margin,
+        padding = frame_pad,
+        margin  = 0,
         self.board_widget,
     }
 
-    self.status_text:setMaxWidth(is_landscape and btn_width or (self.board_widget.w + frame_extra))
-
-    -- D-pad buttons
-    local dpad_w = math.floor(btn_width * 0.35)
-    local dpad = ButtonTable:new{
-        shrink_unneeded_width = true,
-        width   = btn_width,
-        buttons = {
-            { { text = "\xe2\x86\x91", callback = function() self:moveDir(-1, 0) end } },
-            {
-                { text = "\xe2\x86\x90", callback = function() self:moveDir(0, -1) end },
-                { text = _("Undo"),     callback = function() self:onUndo() end },
-                { text = "\xe2\x86\x92", callback = function() self:moveDir(0, 1) end },
-            },
-            { { text = "\xe2\x86\x93", callback = function() self:moveDir(1, 0) end } },
-        },
-    }
-
-    local bottom_buttons = ButtonTable:new{
-        shrink_unneeded_width = true,
-        width   = btn_width,
-        buttons = {{
-            { text = _("Restart"), callback = function() self:onRestart() end },
-        }},
-    }
-
     if is_landscape then
-        local panel = VerticalGroup:new{
-            align = "center",
-            nav_buttons,
-            VerticalSpan:new{ width = Size.span.vertical_large },
-            self.status_text,
-            VerticalSpan:new{ width = Size.span.vertical_large },
-            dpad,
-            VerticalSpan:new{ width = Size.span.vertical_large },
-            bottom_buttons,
-        }
         local content = HorizontalGroup:new{
             align  = "center",
             board_frame,
-            HorizontalSpan:new{ width = Size.span.horizontal_default },
-            panel,
+            HorizontalSpan:new{ width = self:getGutter() },
+            controls,
         }
         self:buildLandscapeLayout(title_bar, content)
     else
-        local content = VerticalGroup:new{
-            align = "center",
-            board_frame,
-            VerticalSpan:new{ width = Size.span.vertical_large },
-            self.status_text,
-        }
-        local footer = VerticalGroup:new{
-            align = "center",
-            nav_buttons,
-            VerticalSpan:new{ width = Size.span.vertical_large },
-            dpad,
-            VerticalSpan:new{ width = Size.span.vertical_large },
-            bottom_buttons,
-        }
-        self:buildPortraitLayout(title_bar, content, footer)
+        self:buildPortraitLayout(title_bar, board_frame,
+            VerticalGroup:new{ align = "center", controls, VerticalSpan:new{ width = self:getGutter() } })
     end
     self:updateStatus()
 end
@@ -256,11 +212,15 @@ function SokobanScreen:updateStatus(msg)
     if msg then
         status = msg
     elseif self.board.won then
-        status = T(_("Solved! Moves: %1  Pushes: %2"), self.board.moves, self.board.pushes)
+        status = self:joinStatus(_("Solved!"),
+            T(_("Moves: %1"), self.board.moves),
+            T(_("Pushes: %1"), self.board.pushes))
     else
         local total, _unused, done = self.board:countBoxes()
-        status = T(_("Boxes: %1/%2  Moves: %3  Pushes: %4"),
-            done, total, self.board.moves, self.board.pushes)
+        status = self:joinStatus(self:_levelLabel(),
+            T(_("Boxes: %1/%2"), done, total),
+            T(_("Moves: %1"), self.board.moves),
+            T(_("Pushes: %1"), self.board.pushes))
     end
     ScreenBase.updateStatus(self, status)
 end
