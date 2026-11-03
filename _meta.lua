@@ -2,6 +2,6 @@ local _ = require("gettext")
 
 return {
     fullname    = _("Sokoban"),
-    description = _("Push all crates onto their targets. You can push but not pull."),
-    version     = "1.2.2",
+    description = _("Push every box onto a target. 372 levels in four difficulties, all proven solvable, with hints, a list of the levels solved and a Daily Challenge."),
+    version     = "1.3.0",
 }

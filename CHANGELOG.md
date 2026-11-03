@@ -6,6 +6,28 @@ Reconstructed from this repository's git history: each release lists the
 feature and fix commits it carried. Version bumps, screenshot additions
 and CI syncs are left out.
 
+## [1.3.0] - 2026-11-03
+
+### Added
+- 372 new levels in four difficulties (Beginner, Intermediate, Advanced,
+  Expert), each proven solvable and shown with the fewest pushes it takes.
+  They replace the 20 old levels, six of which could not be solved.
+- Your progress is kept: solved levels get a check mark in the new *Level*
+  menu, the *Difficulty* menu shows how many you have solved, and "New game"
+  opens the next level you haven't solved yet.
+- Hint: the first tap marks the box to push next and the square it goes to,
+  the second does it. It works from any position, and says so when a box is
+  stuck for good.
+- Show solution: steps through an optimal solution, forwards and back.
+- Daily Challenge: the same level for everyone today.
+
+### Changed
+- The position is saved with its moves, so Undo still works after you close
+  and reopen the game. A game in progress from 1.2 starts on a new level.
+- ◀ and ▶ move through the levels of the current difficulty.
+- The arrows grey out once the level is solved, and the bar under them turns
+  into "New game".
+
 ## [1.2.2] - 2026-11-02
 
 ### Changed

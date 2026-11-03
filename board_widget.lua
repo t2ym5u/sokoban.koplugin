@@ -30,6 +30,26 @@ local C_BOX_T   = Blitbuffer.COLOR_GRAY_4
 local C_PLAYER  = Blitbuffer.COLOR_GRAY_2
 local C_OUTSIDE = Blitbuffer.COLOR_WHITE
 
+local function outline(bb, x, y, w, h, t)
+    bb:paintRect(x, y, w, t, C_FG)
+    bb:paintRect(x, y + h - t, w, t, C_FG)
+    bb:paintRect(x, y, t, h, C_FG)
+    bb:paintRect(x + w - t, y, t, h, C_FG)
+end
+
+local function dashedOutline(bb, x, y, w, h, t, dash)
+    for xx = x, x + w - 1, 2 * dash do
+        local l = math.min(dash, x + w - xx)
+        bb:paintRect(xx, y, l, t, C_FG)
+        bb:paintRect(xx, y + h - t, l, t, C_FG)
+    end
+    for yy = y, y + h - 1, 2 * dash do
+        local l = math.min(dash, y + h - yy)
+        bb:paintRect(x, yy, t, l, C_FG)
+        bb:paintRect(x + w - t, yy, t, l, C_FG)
+    end
+end
+
 -- ---------------------------------------------------------------------------
 -- SokobanBoardWidget
 -- ---------------------------------------------------------------------------
@@ -166,6 +186,16 @@ function SokobanBoardWidget:paintTo(bb, x, y)
                 bb:paintRect(cx, cy, cell, cell, C_OUTSIDE)
             end
         end
+    end
+
+    -- Hint: the box to push next (thick outline) and where it goes (dashed).
+    local hb = board.hint_box
+    if hb then
+        local t = math.max(3, math.floor(cell / 10))
+        outline(bb, x + (hb.c - 1) * cell, y + (hb.r - 1) * cell, cell, cell, t)
+        local inset = math.max(2, math.floor(cell / 10))
+        dashedOutline(bb, x + (hb.to_c - 1) * cell + inset, y + (hb.to_r - 1) * cell + inset,
+            cell - 2 * inset, cell - 2 * inset, math.max(2, math.floor(cell / 14)), math.max(3, math.floor(cell / 7)))
     end
 end
 
