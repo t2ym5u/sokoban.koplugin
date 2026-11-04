@@ -12,7 +12,6 @@ return {
     ["Level"]        = { fr = "Niveau", es = "Nivel", de = "Level" },
     ["Level: %1"]    = { fr = "Niveau : %1", es = "Nivel: %1", de = "Level: %1" },
     ["No. %1"]       = { fr = "Nº %1", es = "N.º %1", de = "Nr. %1" },
-    ["Solved: %1/%2"] = { fr = "Résolus : %1/%2", es = "Resueltos: %1/%2", de = "Gelöst: %1/%2" },
     ["Step back"]    = { fr = "Reculer", es = "Atrás", de = "Zurück" },
     ["Step forward"] = { fr = "Avancer", es = "Adelante", de = "Vor" },
     ["Solution: move %1/%2"] = { fr = "Solution : coup %1/%2", es = "Solución: movimiento %1/%2", de = "Lösung: Zug %1/%2" },
@@ -25,4 +24,7 @@ return {
     ["No hint from here: undo or restart."] = { fr = "Pas d'astuce : annulez ou recommencez.", es = "Sin pista aquí: deshaga o reinicie.", de = "Kein Tipp hier: rückgängig oder neu starten." },
     ["Push the marked box."] = { fr = "Poussez la caisse marquée.", es = "Empuje la caja marcada.", de = "Schiebe die markierte Kiste." },
     ["Box pushed."]         = { fr = "Caisse poussée.", es = "Caja empujada.", de = "Kiste geschoben." },
+    -- Same text as trafficjam / klotski.
+    ["Solved: %1/%2 · minimum: %3"] = { fr = "Résolus : %1/%2 · au minimum : %3", es = "Resueltos: %1/%2 · en el mínimo: %3", de = "Gelöst: %1/%2 · minimal: %3" },
+    ["Solved with hints: %1 pushes (fewest: %2)."] = { fr = "Résolu avec des astuces : %1 poussées (minimum : %2).", es = "Resuelto con pistas: %1 empujes (mínimo: %2).", de = "Mit Tipps gelöst: %1 Schübe (Minimum: %2)." },
 }

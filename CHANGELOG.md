@@ -6,6 +6,18 @@ Reconstructed from this repository's git history: each release lists the
 feature and fix commits it carried. Version bumps, screenshot additions
 and CI syncs are left out.
 
+## [1.4.0] - 2026-11-04
+
+### Added
+- Levels solved in the fewest pushes now get a star: the *Level* list shows ★
+  for a level solved in the fewest pushes without a hint, ✓ for any other solve,
+  and the *Difficulty* menu shows "Solved: x/y · minimum: z". A later
+  solve in the fewest pushes turns a ✓ into a ★; a slower one never takes a
+  ★ away. Levels solved before this version keep their ✓.
+- A win that used a hint (even one only shown, not played) now says so
+  instead of claiming the fewest pushes: a level solved with
+  help doesn't earn the star.
+
 ## [1.3.2] - 2026-11-04
 
 ### Fixed
