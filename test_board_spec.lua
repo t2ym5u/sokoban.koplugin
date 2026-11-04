@@ -139,6 +139,65 @@ describe("SokobanBoard", function()
         end)
     end)
 
+    describe("optimal mark", function()
+        it("counts pushes, not steps: a long walk in the fewest pushes is optimal", function()
+            local b = Board:new{ rows = SMALL, optimal = 2 }
+            play(b, "lruuddlluRR")   -- wanders, then 2 pushes
+            assert.is_true(b:isWon())
+            assert.is_true(b:isOptimalWin())
+        end)
+
+        it("is not optimal with extra pushes, unless taken back by Undo", function()
+            local b = Board:new{ rows = SMALL, optimal = 2 }
+            play(b, "lluRurrdLulldRR")
+            assert.is_true(b:isWon())
+            assert.are.equal(4, b.pushes)
+            assert.is_false(b:isOptimalWin())
+
+            b = Board:new{ rows = SMALL, optimal = 2 }
+            play(b, "lluRurrdL")
+            for _ = 1, 5 do assert.is_true(b:undoMove()) end
+            play(b, "R")
+            assert.is_true(b:isWon())
+            assert.are.equal(2, b.pushes)
+            assert.is_true(b:isOptimalWin())
+        end)
+
+        it("is not optimal once a hint was shown, even after a restart", function()
+            local b = Board:new{ rows = SMALL, optimal = 2 }
+            b:noteHintSeen()
+            b:restart()
+            play(b, "lluRR")
+            assert.is_true(b:isWon())
+            assert.is_false(b:isOptimalWin())
+
+            b = first()
+            b:noteHintUsed()
+            assert.is_true(b.hint_seen)
+            b:setLevel(b.start_rows, { optimal = 2 })
+            assert.is_nil(b.hint_seen)
+        end)
+
+        it("keeps the hint flag in the save; old saves have none", function()
+            local b = first()
+            b:noteHintSeen()
+            local b2 = Board:new()
+            assert.is_true(b2:load(b:serialize(), Levels.get))
+            assert.is_true(b2.hint_seen)
+            local old = first():serialize()
+            old.hint_seen = nil
+            assert.is_true(b2:load(old, Levels.get))
+            assert.is_nil(b2.hint_seen)
+        end)
+
+        it("the stored solution of a bank level earns it", function()
+            local b, lv = first("advanced")
+            play(b, lv.solution)
+            assert.is_true(b:isWon())
+            assert.is_true(b:isOptimalWin())
+        end)
+    end)
+
     describe("serialize / load", function()
         it("round-trips the level and the moves made", function()
             local b, lv = first("expert")

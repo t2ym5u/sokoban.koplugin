@@ -25,6 +25,7 @@ local MenuHelper         = require("menu_helper")
 local SokobanBoard       = lrequire("board")
 local SokobanBoardWidget = lrequire("board_widget")
 local Levels             = lrequire("levels")
+local Progress           = lrequire("progress")
 
 local DeviceScreen = Device.screen
 
@@ -45,7 +46,7 @@ Controls:
 • Hint: the first tap marks the box to push next (thick outline) and the square it goes to (dashed); the second tap walks there and pushes it. Hints follow a solution from where you are; if a box is already stuck, Undo or Restart.
 • Show solution (menu) gives up the level and lets you step through a solution.
 
-Every level comes with the fewest pushes it can be solved in. "New game" opens the next level you haven't solved yet; "Level" lets you pick any level, solved ones carry a check mark. The Daily Challenge is the same level for everyone today.
+Every level comes with the fewest pushes it can be solved in. "New game" opens the next level you haven't solved yet; "Level" lets you pick any level, solved ones carry a check mark (✓), and a star (★) when solved in the fewest pushes without a hint. The Daily Challenge is the same level for everyone today.
 
 Difficulty: Beginner levels take up to 12 pushes, Intermediate 13 to 22, Advanced 23 to 32, Expert 33 or more.
 ]]
@@ -67,7 +68,7 @@ Commandes :
 • Astuce : le premier appui marque la caisse à pousser (contour épais) et la case où elle va (pointillés) ; le second fait le trajet et la pousse. Les astuces suivent une solution depuis la position actuelle ; si une caisse est déjà bloquée, annulez ou recommencez.
 • Voir la solution (menu) abandonne le niveau et permet de parcourir une solution pas à pas.
 
-Chaque niveau indique le plus petit nombre de poussées qui le résout. « Nouvelle partie » ouvre le prochain niveau pas encore résolu ; « Niveau » permet de choisir n'importe quel niveau, les niveaux résolus sont cochés. Le Défi du jour est le même niveau pour tout le monde aujourd'hui.
+Chaque niveau indique le plus petit nombre de poussées qui le résout. « Nouvelle partie » ouvre le prochain niveau pas encore résolu ; « Niveau » permet de choisir n'importe quel niveau, les niveaux résolus sont cochés (✓), et reçoivent une étoile (★) s'ils l'ont été avec le moins de poussées possible, sans astuce. Le Défi du jour est le même niveau pour tout le monde aujourd'hui.
 
 Difficulté : les niveaux Débutant se font en 12 poussées au plus, Intermédiaire de 13 à 22, Avancé de 23 à 32, Expert en 33 ou plus.
 ]]
@@ -82,6 +83,7 @@ local BAND_LABELS = {
 local SokobanScreen = ScreenBase:extend{}
 
 function SokobanScreen:init()
+    self.progress = Progress.new(self.plugin)
     self.board = SokobanBoard:new()
     if not self.board:load(self.plugin:loadState(), Levels.get) then
         local band = self:_getBand()
@@ -107,27 +109,16 @@ function SokobanScreen:_getBand()
     return Levels.isBand(b) and b or Levels.DEFAULT_BAND
 end
 
--- Solved levels of a band: a string of "0"/"1", one character per level.
-function SokobanScreen:_solvedMap(band)
-    local s = self.plugin:getSetting("solved_" .. band, "")
-    return type(s) == "string" and s or ""
-end
-
+-- Solved / solved-in-the-fewest-pushes levels: see progress.lua.
 function SokobanScreen:isLevelSolved(band, index)
-    return self:_solvedMap(band):sub(index, index) == "1"
+    return self.progress:isSolved(band, index)
 end
 
-function SokobanScreen:solvedCount(band)
-    local _, n = self:_solvedMap(band):gsub("1", "")
-    return n
-end
-
-function SokobanScreen:_markSolved(band, index)
-    if not band or not index or index < 1 then return end
-    local s = self:_solvedMap(band)
-    if #s < index then s = s .. string.rep("0", index - #s) end
-    s = s:sub(1, index - 1) .. "1" .. s:sub(index + 1)
-    self.plugin:saveSetting("solved_" .. band, s)
+-- A win marks the level solved, and optimal too when it took the fewest
+-- pushes with no hint. Marks are never taken back.
+function SokobanScreen:_markSolved()
+    local b = self.board
+    self.progress:record(b.band, b.index, b:isOptimalWin())
 end
 
 -- The first level of the band not solved yet (other than the one on the
@@ -261,7 +252,7 @@ end
 function SokobanScreen:_afterMove()
     self.hint_cell = nil
     local b = self.board
-    if b:isWon() then self:_markSolved(b.band, b.index) end
+    if b:isWon() then self:_markSolved() end
     self:_save()
     if b:isWon() then
         -- the arrows grey out and the bar turns into "New game"
@@ -329,9 +320,15 @@ function SokobanScreen:onHint()
             return
         end
     end
+    local used = b:getHintsUsed()
     ScreenBase.onHint(self)
+    -- A hint shown, even one only marked, rules out the optimal mark.
+    if (self.hint_cell or b:getHintsUsed() > used) and not b.hint_seen then
+        b:noteHintSeen()
+        self:_save()
+    end
     if b:isWon() then
-        self:_markSolved(b.band, b.index)
+        self:_markSolved()
         self:_save()
         self:_relayout()
         return
@@ -390,12 +387,15 @@ function SokobanScreen:openDifficultyMenu()
     for _i, id in ipairs(Levels.BANDS) do
         items[#items + 1] = {
             id   = id,
-            text = BAND_LABELS[id] .. " · " .. T(_("Solved: %1/%2"), self:solvedCount(id), Levels.count(id)),
+            text = BAND_LABELS[id] .. " · " .. T(_("Solved: %1/%2 · minimum: %3"),
+                self.progress:solvedCount(id), Levels.count(id), self.progress:optimalCount(id)),
         }
     end
     MenuHelper.openPickerMenu{
         title      = _("Difficulty"),
         items      = items,
+        -- Wide enough for "Intermédiaire · Résolus : 600/600 · au minimum : 600".
+        width_ratio = 0.9,
         current_id = self:_getBand(),
         parent     = self,
         on_select  = function(id)
@@ -406,7 +406,7 @@ function SokobanScreen:openDifficultyMenu()
 end
 
 -- Every level of the current difficulty, opened on the page of the level in
--- play; solved ones carry a check mark.
+-- play; solved ones carry a check mark, a star if solved in the fewest pushes.
 function SokobanScreen:openLevelMenu()
     local band = self:_getBand()
     local total = Levels.count(band)
@@ -419,7 +419,7 @@ function SokobanScreen:openLevelMenu()
         local nboxes = select(2, lv.map:gsub("[%$%*]", ""))
         item_table[i] = {
             text      = T("%1 · %2 · %3", i, T(_("%1 boxes"), nboxes), T(_("%1 pushes"), lv.optimal)),
-            mandatory = self:isLevelSolved(band, i) and "✓" or nil,
+            mandatory = self.progress:mark(band, i),
             checked   = i == cur,
             callback  = function()
                 UIManager:close(menu)
@@ -482,8 +482,10 @@ function SokobanScreen:updateStatus(msg)
     elseif b:isShowingSolution() then
         status = T(_("Solution: move %1/%2"), b.sol_step, #b.solution)
     elseif b:isWon() then
-        if b.optimal and b.pushes <= b.optimal then
+        if b:isOptimalWin() then
             status = T(_("Solved! %1 pushes, the fewest possible."), b.pushes)
+        elseif b.hint_seen or b:getHintsUsed() > 0 then
+            status = T(_("Solved with hints: %1 pushes (fewest: %2)."), b.pushes, b.optimal or "?")
         else
             status = T(_("Solved! %1 pushes (fewest: %2)."), b.pushes, b.optimal or "?")
         end

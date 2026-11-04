@@ -83,6 +83,7 @@ function SokobanBoard:setLevel(rows, meta)
     self.optimal    = meta.optimal
     self.stored_solution = meta.solution
     self.hints_used = 0
+    self.hint_seen  = nil
     self:_reset()
 end
 
@@ -319,8 +320,25 @@ function SokobanBoard:applyHint(step)
     return true
 end
 
-function SokobanBoard:noteHintUsed() self.hints_used = self.hints_used + 1 end
+function SokobanBoard:noteHintUsed()
+    self.hints_used = self.hints_used + 1
+    self.hint_seen = true
+end
 function SokobanBoard:getHintsUsed() return self.hints_used end
+
+-- Any hint shown for this level, played or only marked (the first tap
+-- already names the box). Restart doesn't clear it.
+function SokobanBoard:noteHintSeen()
+    self.hint_seen = true
+end
+
+-- True for a win in the level's fewest pushes with no hint: what earns the
+-- optimal mark. Pushes are what the shipped optimum counts; walking steps
+-- don't matter, and undone pushes are taken back off the count.
+function SokobanBoard:isOptimalWin()
+    return self.won and self.optimal ~= nil and self.pushes <= self.optimal
+        and not self.hint_seen and (self.hints_used or 0) == 0
+end
 
 -- ---------------------------------------------------------------------------
 -- Show solution: gives the level up and steps through the stored solution
@@ -375,6 +393,7 @@ function SokobanBoard:serialize()
         daily      = self.daily,
         history    = table.concat(self.history),
         hints_used = self.hints_used,
+        hint_seen  = self.hint_seen,
         sol_step   = self.solution and self.sol_step or nil,
     }
 end
@@ -399,6 +418,7 @@ function SokobanBoard:load(data, getLevel)
         end
     end
     self.hints_used = tonumber(data.hints_used) or 0
+    self.hint_seen  = data.hint_seen and true or nil
     return true
 end
 

@@ -22,8 +22,9 @@ ahead — a box pushed into a corner may never move again.
   hardest.
 - **Progress** — "New game" opens the next level you haven't solved; the
   *Level* menu lists every level of the difficulty with its box count and
-  fewest pushes (✓ on solved ones), and the *Difficulty* menu shows how many
-  you've solved.
+  fewest pushes (✓ on solved ones, ★ on those solved in the fewest pushes
+  without a hint), and the *Difficulty* menu shows how many you've solved,
+  and how many in the minimum.
 - **Daily Challenge** — the same level for everyone today.
 - **Hint** — two taps: the first marks the box to push next and outlines the
   square it goes to, the second walks there and pushes it. From the start a
