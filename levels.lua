@@ -68,4 +68,14 @@ function Levels.get(band, index)
     return lv
 end
 
+-- True once the bank is parsed (for tests).
+function Levels.isLoaded()
+    return bank ~= nil
+end
+
+-- Drops the parsed bank; the next call reads levels_data.lua again (~1-3 ms).
+function Levels.release()
+    bank = nil
+end
+
 return Levels
