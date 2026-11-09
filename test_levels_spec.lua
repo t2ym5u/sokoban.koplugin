@@ -1,33 +1,13 @@
 local DIR = debug.getinfo(1, "S").source:sub(2):match("(.*[/\\])") or "./"
 
 -- Level bank integrity: every level is well formed, distinct, and its stored
--- solution replays to a win in exactly its optimal push count. (Optimality
--- itself is proven offline by tools/merge_levels.lua: A* over the full state
--- space takes too long for a unit test; a sample is re-proven here.)
+-- solution replays to a win in exactly its stored push count. (The bands and
+-- the optimality of that count live in test_difficulty_spec.lua.)
 describe("level bank", function()
     local Levels, Solver
     setup(function()
         Levels = dofile(DIR .. "levels.lua")
         Solver = dofile(DIR .. "solver.lua")
-    end)
-
-    it("has four bands, a few hundred levels, sorted by pushes and in their band's range", function()
-        local ranges = { beginner = { 1, 12 }, intermediate = { 13, 22 }, advanced = { 23, 32 },
-                         expert = { 33, 999 } }
-        local total = 0
-        for _, band in ipairs(Levels.BANDS) do
-            local n = Levels.count(band)
-            assert.is_true(n >= 50, band .. " has " .. n)
-            total = total + n
-            local prev = 0
-            for i = 1, n do
-                local lv = Levels.get(band, i)
-                assert.is_true(lv.optimal >= ranges[band][1] and lv.optimal <= ranges[band][2])
-                assert.is_true(lv.optimal >= prev)
-                prev = lv.optimal
-            end
-        end
-        assert.is_true(total >= 300, "total " .. total)
     end)
 
     it("every level is well formed, fits the screen and is unique", function()
@@ -61,14 +41,6 @@ describe("level bank", function()
                 assert.is_true(ok, band .. " " .. i .. ": " .. tostring(pushes))
                 assert.are.equal(lv.optimal, pushes)
             end
-        end
-    end)
-
-    it("A* finds no shorter solution (first level of each band)", function()
-        for _, band in ipairs(Levels.BANDS) do
-            local lv = Levels.get(band, 1)
-            local _m, pushes = Solver.solve(lv.rows)
-            assert.are.equal(lv.optimal, pushes)
         end
     end)
 end)
